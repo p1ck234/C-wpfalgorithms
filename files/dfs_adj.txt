@@ -1,0 +1,143 @@
+<Window x:Class="dfs_adj.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:dfs_adj"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+        
+        <TextBlock VerticalAlignment="Top" Margin="0,10,0,0" >Кол-во вершин:</TextBlock>
+        <TextBox Name="vertex_matrix"  Background="Aqua" Width="30" Height="30" VerticalAlignment="Top" Margin="0,10,170,0" />
+        
+        <TextBlock VerticalAlignment="Top" HorizontalAlignment="Center" Margin="40,10,0,0">Кол-во ребер:</TextBlock>
+        <TextBox Name="edges_matrix"  Background="Aqua" Width="30" Height="30" VerticalAlignment="Top" Margin="170,10,0,0" />
+        
+        <TextBox Name="matrix_form"  Background="Aqua" Width="200" Height="200" VerticalAlignment="Center" />
+
+
+        <Button Name="result_matrix_form" Click="result_matrix_form_Click" Background="DarkRed"  Width="120" Height="60"   Grid.Column="1" Margin="150,0,0,300" Content="Решить" />
+        <Button Name="enter_clc" Click="enter_clc_Click" Background="DarkRed" Grid.Column="1" Width="200" Height="100" VerticalAlignment="Center" Content="Перейти на след строку"   />
+        <Button Name="result_matrix_file" Click="result_matrix_file_Click" Background="DarkRed" Grid.Column="1" Width="120" Height="60"  Content="Посчитать из файла" Margin="0,0,150,300" />
+    </Grid>
+</Window>
+
+
+
+
+
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+
+namespace dfs_adj
+{
+    /// <summary>
+    /// Логика взаимодействия для MainWindow.xaml
+    /// </summary>
+    public partial class MainWindow : Window
+    {
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
+
+        private void enter_clc_Click(object sender, RoutedEventArgs e)
+        {
+            matrix_form.Text += '\n';
+        }
+
+        public int N; //кол-во вершин
+        public int M; //кол-во ребер
+        private void result_matrix_form_Click(object sender, RoutedEventArgs e)
+        {
+            N = Int32.Parse(vertex_matrix.Text);
+            M = Int32.Parse(edges_matrix.Text);
+            int[,] matrix = new int[N, N];
+            string[] input_matrix = matrix_form.Text.Split('\n');
+            string[] qq;
+            for (int i = 0; i < M; i++)
+            {
+                qq = input_matrix[i].Split(' ');
+                int a = int.Parse(qq[0]) - 1;
+                int b = int.Parse(qq[1]) - 1;
+                matrix[a, b] = 1;
+                matrix[b, a] = 1;
+
+            }
+            bool[] visit = new bool[N];
+            List<int> nodes = new List<int>();
+            DFS(0, matrix, visit, nodes);
+            string s = "";
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                s += nodes[i].ToString() + " ";
+            }
+            MessageBox.Show(s);
+        }
+
+        public void DFS(int v, int[,] mas, bool[] vs, List<int> nodes)
+        {
+            vs[v] = true;
+            nodes.Add(v + 1);
+            for (int i = 0; i < N; i++)
+                if ((mas[v, i] != 0) && (!vs[i])) DFS(i, mas, vs, nodes);
+        }
+
+        private void result_matrix_file_Click(object sender, RoutedEventArgs e)
+        {
+            StreamReader file = new StreamReader("input.txt");
+            string s = file.ReadToEnd();
+            file.Close();
+            string[] str = s.Split('\n');
+            string[] col = str[0].Split(' ');
+            N = int.Parse(col[0]);
+            M = int.Parse(col[1]);
+            int[,] m = new int[N,N];
+            for (int i = 1; i <= M; i++)
+            {
+                col = str[i].Split(' ');
+                int a = int.Parse(col[0]) - 1;
+                int b = int.Parse(col[1]) - 1;
+                m[a, b] = 1;
+                m[b, a] = 1;
+            }
+            bool[] vs = new bool[str.Length];
+            List<int> nodes2 = new List<int>();
+            DFS(0, m, vs, nodes2);
+            string ss = "";
+            for (int i = 0; i < nodes2.Count; i++)
+            {
+                ss += nodes2[i].ToString() + " ";
+            }
+            printRes(ss);
+
+        }
+        public void printRes(string res)
+        {
+            using (StreamWriter stream = new StreamWriter("output.txt", false))
+            {
+                stream.WriteLine(res);
+            }
+            MessageBox.Show("Решение записано в файл!");
+        }
+    }
+}

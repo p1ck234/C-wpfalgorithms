@@ -1,0 +1,226 @@
+<Window x:Class="color.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:color"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800" Background="LightCoral">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+
+        <TextBlock VerticalAlignment="Top" Margin="98,38,298.6,0" Grid.ColumnSpan="2" FontSize="18" FontFamily="Verdana" FontStyle="Oblique" >Кол-во вершин:</TextBlock>
+        <TextBox Name="vertex_matrix"  Background="DarkSeaGreen"  Width="30" Height="30" VerticalAlignment="Top" Margin="160,75,0,0" FontSize="18" FontFamily="Verdana" FontStyle="Oblique"/>
+
+        <TextBlock VerticalAlignment="Top" HorizontalAlignment="Center" Margin="114,83,148.8,0" FontSize="18" FontFamily="Verdana" FontStyle="Oblique">Кол-во ребер:</TextBlock>
+        <TextBox Name="edges_matrix"  Background="DarkSeaGreen" Width="30" Height="30" VerticalAlignment="Top" Margin="160,30,0,0" FontSize="18" FontFamily="Verdana" FontStyle="Oblique"/>
+
+        <TextBox Name="matrix_form"  Background="DarkSeaGreen" Width="200" Height="200" VerticalAlignment="Center" FontSize="18" FontFamily="Verdana" FontStyle="Oblique" />
+
+
+        <Button Name="result_matrix_form" Click="result_matrix_form_Click" Background="Plum"  Width="200" Height="60"  Grid.Column="1" Margin="0,0,160,130" Content="Решить" FontSize="18" FontFamily="Verdana" FontStyle="Oblique" />
+        <Button Name="enter_clc" Click="enter_clc_Click" Background="MistyRose"  Grid.Column="1" Height="60" Width="250" VerticalAlignment="Center" Content="Перейти на след строку" FontSize="18" FontFamily="Verdana" FontStyle="Oblique" Margin="0,70,110,0"  />
+        <Button Name="result_matrix_file" Click="result_matrix_file_Click" Background="MintCream"  Grid.Column="1" Height="60" Width="200" Content="Посчитать из файла" Margin="0,0,160,337" FontSize="18" FontFamily="Verdana" FontStyle="Oblique" />
+
+        <Button Name="steret" Click="steret_Click"  Grid.Column="1" Width="180" Height="60" Content="Стереть" Margin="0,250,180,0"  FontSize="18" FontFamily="Verdana" FontStyle="Oblique" Background="DarkKhaki"/>
+        <Button Name="exit" Click="exit_Click"  Grid.Column="1" Width="100" Height="60" Content="Выход" Margin="280,340,0,0" FontSize="18" FontFamily="Verdana" FontStyle="Oblique" Background="Purple" />
+
+
+    </Grid>
+</Window>
+
+
+
+
+
+
+
+
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+
+namespace color
+{
+    /// <summary>
+    /// Логика взаимодействия для MainWindow.xaml
+    /// </summary>
+    public partial class MainWindow : Window
+    {
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
+
+        public int N; //кол-во вершин
+        public int M; //кол-во ребер
+
+
+
+
+        private void enter_clc_Click(object sender, RoutedEventArgs e)
+        {
+            matrix_form.Text += '\n';
+        }
+
+        private void result_matrix_form_Click(object sender, RoutedEventArgs e)
+        {
+            N = Int32.Parse(vertex_matrix.Text);
+            M = Int32.Parse(edges_matrix.Text);
+            Graph graph = new Graph(N);
+            string[] input_matrix = matrix_form.Text.Split('\n');
+            string[] qq;
+            for (int i = 0; i < M; i++)
+            {
+                qq = input_matrix[i].Split(' ');
+                int a = int.Parse(qq[0]);
+                int b = int.Parse(qq[1]);
+                graph.addEdge(a, b);
+            }
+            bool fal = false;
+            graph.greedyColoring(fal);
+        }
+
+
+
+        private void result_matrix_file_Click(object sender, RoutedEventArgs e)
+        {
+            StreamReader file = new StreamReader("input.txt");
+            string s = file.ReadToEnd();
+            file.Close();
+            string[] str = s.Split('\n');
+            string[] col = str[0].Split(' ');
+            N = int.Parse(col[0]);
+            M = int.Parse(col[1]);
+            Graph graph = new Graph(N);
+            for (int i = 1; i <= M; i++)
+            {
+                col = str[i].Split(' ');
+                int a = int.Parse(col[0]);
+                int b = int.Parse(col[1]);
+                graph.addEdge(a, b);
+            }
+            bool tr = true;
+            graph.greedyColoring(tr);
+        }
+
+        class Graph
+        {
+            private int V; // No. of vertices
+            private List<int>[] adj; //Adjacency List
+
+            //Constructor
+            public Graph(int v)
+            {
+                V = v;
+                adj = new List<int>[v];
+                for (int i = 0; i < v; ++i)
+                    adj[i] = new List<int>();
+            }
+
+            //Function to add an edge into the graph
+            public void addEdge(int v, int w)
+            {
+                adj[v].Add(w);
+                adj[w].Add(v); //Graph is undirected
+            }
+
+            // Assigns colors (starting from 0) to all vertices and
+            // prints the assignment of colors
+            public void greedyColoring(bool fil)
+            {
+                int[] result = new int[V];
+
+                // Initialize all vertices as unassigned
+                for (int i = 0; i < V; i++)
+                {
+                    result[i] = -1;
+                }
+
+                // Assign the first color to first vertex
+                result[0] = 0;
+
+                // A temporary array to store the available colors. False
+                // value of available[cr] would mean that the color cr is
+                // assigned to one of its adjacent vertices
+                bool[] available = new bool[V];
+
+                // Initially, all colors are available
+                for (int i = 0; i < V; i++)
+                {
+                    available[i] = true;
+                }
+
+                // Assign colors to remaining V-1 vertices
+                for (int u = 1; u < V; u++)
+                {
+                    // Process all adjacent vertices and flag their colors
+                    // as unavailable
+                    foreach (int i in adj[u])
+                    {
+                        if (result[i] != -1)
+                            available[result[i]] = false;
+                    }
+
+                    // Find the first available color
+                    int cr;
+                    for (cr = 0; cr < V; cr++)
+                    {
+                        if (available[cr])
+                            break;
+                    }
+
+                    result[u] = cr; // Assign the found color
+
+                    // Reset the values back to true for the next iteration
+                    for (int i = 0; i < V; i++)
+                    {
+                        available[i] = true;
+                    }
+                }
+                string por = "";
+                // print the result
+                for (int u = 0; u < V; u++)
+                    por += $"Vertex  {u}  --->  Color   {result[u]}\n";
+                if(fil)
+                {
+                    using (StreamWriter stream = new StreamWriter("output.txt", false))
+                    {
+                        stream.WriteLine(por);
+                    }
+                    MessageBox.Show("Решение записано в файл!");
+
+                }
+                else MessageBox.Show(por);
+            }
+        }
+
+        private void exit_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
+        private void steret_Click(object sender, RoutedEventArgs e)
+        {
+            matrix_form.Text = "";
+            vertex_matrix.Text = "";
+            edges_matrix.Text = "";
+        }
+    }
+}

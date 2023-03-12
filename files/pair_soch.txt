@@ -1,0 +1,252 @@
+<Window x:Class="pair_soch.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:pair_soch"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+
+        <TextBlock VerticalAlignment="Top" Margin="0,10,0,0" >Кол-во вершин:</TextBlock>
+        <TextBox Name="vertex_matrix"  Background="Aqua" Width="30" Height="30" VerticalAlignment="Top" Margin="0,10,170,0" />
+
+        <TextBlock VerticalAlignment="Top" HorizontalAlignment="Center" Margin="40,10,0,0">Кол-во ребер:</TextBlock>
+        <TextBox Name="edges_matrix"  Background="Aqua" Width="30" Height="30" VerticalAlignment="Top" Margin="170,10,0,0" />
+
+        <TextBox Name="matrix_form"  Background="Aqua" Width="200" Height="200" VerticalAlignment="Center" />
+
+
+        <Button Name="result_matrix_form" Click="result_matrix_form_Click" Background="DarkRed"  Width="120" Height="60"   Grid.Column="1" Margin="150,0,0,300" Content="Решить" />
+        <Button Name="enter_clc" Click="enter_clc_Click" Background="DarkRed" Grid.Column="1" Width="200" Height="100" VerticalAlignment="Center" Content="Перейти на след строку"   />
+        <Button Name="result_matrix_file" Click="result_matrix_file_Click" Background="DarkRed" Grid.Column="1" Width="120" Height="60"  Content="Посчитать из файла" Margin="0,0,150,300" />
+    </Grid>
+
+</Window>
+
+
+
+
+
+
+
+
+using System;
+using System.IO;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+
+namespace pair_soch
+{
+    /// <summary>
+    /// Логика взаимодействия для MainWindow.xaml
+    /// </summary>
+    public partial class MainWindow : Window
+    {
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
+        private void enter_clc_Click(object sender, RoutedEventArgs e)
+        {
+            matrix_form.Text += '\n';
+        }
+
+
+        public class Graph2
+        {
+            private int V; // No. of vertices
+
+            // Array of lists for Adjacency List Representation
+            private List<int>[] adj;
+            int time = 0;
+            static readonly int NIL = -1;
+
+            // Constructor
+            public Graph2(int v)
+            {
+                V = v;
+                adj = new List<int>[v];
+                for (int i = 0; i < v; ++i)
+                    adj[i] = new List<int>();
+            }
+
+            // Function to add an edge into the graph
+            public void addEdge(int v, int w)
+            {
+                adj[v].Add(w); // Add w to v's list.
+                adj[w].Add(v); // Add v to w's list
+            }
+
+            // A recursive function that find articulation points using DFS
+            // u --> The vertex to be visited next
+            // visited[] --> keeps track of visited vertices
+            // disc[] --> Stores discovery times of visited vertices
+            // parent[] --> Stores parent vertices in DFS tree
+            // ap[] --> Store articulation points
+            void APUtil(int u, bool[] visited, int[] disc,
+                        int[] low, int[] parent, bool[] ap)
+            {
+
+                // Count of children in DFS Tree
+                int children = 0;
+
+                // Mark the current node as visited
+                visited[u] = true;
+
+                // Initialize discovery time and low value
+                disc[u] = low[u] = ++time;
+
+                // Go through all vertices adjacent to this
+                foreach (int i in adj[u])
+                {
+                    int v = i; // v is current adjacent of u
+
+                    // If v is not visited yet, then make it a child of u
+                    // in DFS tree and recur for it
+                    if (!visited[v])
+                    {
+                        children++;
+                        parent[v] = u;
+                        APUtil(v, visited, disc, low, parent, ap);
+
+                        // Check if the subtree rooted with v has
+                        // a connection to one of the ancestors of u
+                        low[u] = Math.Min(low[u], low[v]);
+
+                        // u is an articulation point in following cases
+
+                        // (1) u is root of DFS tree and has two or more children.
+                        if (parent[u] == NIL && children > 1)
+                            ap[u] = true;
+
+                        // (2) If u is not root and low value of one of its child
+                        // is more than discovery value of u.
+                        if (parent[u] != NIL && low[v] >= disc[u])
+                            ap[u] = true;
+                    }
+
+                    // Update low value of u for parent function calls.
+                    else if (v != parent[u])
+                        low[u] = Math.Min(low[u], disc[v]);
+                }
+            }
+
+            // The function to do DFS traversal.
+            // It uses recursive function APUtil()
+            public void AP(bool exit)
+            {
+                // Mark all the vertices as not visited
+                bool[] visited = new bool[V];
+                int[] disc = new int[V];
+                int[] low = new int[V];
+                int[] parent = new int[V];
+                bool[] ap = new bool[V]; // To store articulation points
+
+                // Initialize parent and visited, and
+                // ap(articulation point) arrays
+                for (int i = 0; i < V; i++)
+                {
+                    parent[i] = NIL;
+                    visited[i] = false;
+                    ap[i] = false;
+                }
+
+                // Call the recursive helper function to find articulation
+                // points in DFS tree rooted with vertex 'i'
+                for (int i = 0; i < V; i++)
+                    if (visited[i] == false)
+                        APUtil(i, visited, disc, low, parent, ap);
+
+                // Now ap[] contains articulation points, print them
+                string mes = "points: \n";
+                for (int i = 0; i < V; i++)
+                    if (ap[i] == true)
+                        mes += $"{i} ";
+
+
+                if(exit)
+                {
+                    using (StreamWriter stream = new StreamWriter("output.txt", false))
+                    {
+                        stream.WriteLine(mes);
+                    }
+                    MessageBox.Show("Решение записано в файл!");
+                }
+                else MessageBox.Show(mes);
+
+
+            }
+        }
+
+        public int N; //кол-во вершин
+        public int M; //кол-во ребер
+        private void result_matrix_form_Click(object sender, RoutedEventArgs e)
+        {
+            N = Int32.Parse(vertex_matrix.Text);
+            M = Int32.Parse(edges_matrix.Text);
+            int[,] matrix = new int[N, N];
+            string[] input_matrix = matrix_form.Text.Split('\n');
+            string[] qq;
+            Graph2 graph = new Graph2(N);
+            for (int i = 0; i < M; i++)
+            {
+                qq = input_matrix[i].Split(' ');
+                int a = int.Parse(qq[0]);
+                int b = int.Parse(qq[1]);
+                graph.addEdge(a, b);
+            }
+            bool f = false;
+            graph.AP(f);
+        }
+
+        private void result_matrix_file_Click(object sender, RoutedEventArgs e)
+        {
+            StreamReader file = new StreamReader("input.txt");
+            string s = file.ReadToEnd();
+            file.Close();
+            string[] str = s.Split('\n');
+            string[] col = str[0].Split(' ');
+            N = int.Parse(col[0]);
+            M = int.Parse(col[1]);
+            Graph2 graph = new Graph2(N);
+            for (int i = 1; i <= M; i++)
+            {
+                col = str[i].Split(' ');
+                int a = int.Parse(col[0]);
+                int b = int.Parse(col[1]);
+                graph.addEdge(a, b);
+            }
+            bool t = true;
+            graph.AP(t);
+
+        }
+
+
+
+        
+
+
+
+
+
+
+
+    }
+}
+

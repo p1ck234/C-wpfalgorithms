@@ -1,0 +1,154 @@
+<Window x:Class="EulerCycleFinder.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Euler Cycle Finder" Height="350" Width="525">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <StackPanel Orientation="Horizontal">
+            <Label Content="Number of Vertices:" Margin="5"/>
+            <TextBox x:Name="NumVertices" Text="5" Margin="5"/>
+            <Label Content="Adjacency Matrix:" Margin="5"/>
+            <TextBox x:Name="AdjMatrix" Text="0 1 0 1 1&#x0a;1 0 1 1 0&#x0a;0 1 0 1 0&#x0a;1 1 1 0 1&#x0a;1 0 0 1 0" Margin="5" VerticalScrollBarVisibility="Auto" Height="100"/>
+            <Button x:Name="FindEulerCycle" Content="Find Euler Cycle" Click="FindEulerCycle_Click" Margin="5"/>
+            <Button x:Name="frc_file" Click="frc_file_Click" Content="Find Euler Cycle file"  Margin="5"/>
+        </StackPanel>
+        <TextBlock x:Name="ResultText" Grid.Row="1" Margin="5"/>
+    </Grid>
+</Window>
+
+
+
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+
+namespace EulerCycle
+{
+    public partial class MainWindow : Window
+    {
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
+
+        private void FindEulerCycle_Click(object sender, RoutedEventArgs e)
+        {
+            // Parse the input.
+            int n = int.Parse(VerticesTextBox.Text);
+            List<int>[] adjList = new List<int>[n];
+            for (int i = 0; i < n; i++)
+            {
+                adjList[i] = ParseAdjacencyList(AdjacencyListTextBoxes[i].Text);
+            }
+
+            // Find an Euler cycle.
+            List<int> cycle = FindEulerCycle(adjList);
+
+            // Display the result.
+            if (cycle == null)
+            {
+                ResultTextBox.Text = "No Euler cycle found.";
+            }
+            else
+            {
+                ResultTextBox.Text = string.Join(" -> ", cycle);
+            }
+        }
+
+        private List<int> ParseAdjacencyList(string text)
+        {
+            return text.Split(',', ' ', '\t', '\n')
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .Select(s => int.Parse(s))
+                .ToList();
+        }
+
+        private List<int> FindEulerCycle(List<int>[] adjList)
+        {
+            // Check if all degrees are even.
+            if (adjList.Select(l => l.Count).Any(d => d % 2 == 1))
+            {
+                return null;
+            }
+
+            // Initialize the stack with a starting vertex.
+            Stack<int> stack = new Stack<int>();
+            stack.Push(0);
+
+            List<int> cycle = new List<int>();
+
+            while (stack.Count > 0)
+            {
+                int v = stack.Peek();
+
+                // Find an unvisited adjacent vertex.
+                int w = adjList[v].First(u => !cycle.Contains(u));
+
+                // Add the edge (v, w) to the cycle.
+                cycle.Add(v);
+                cycle.Add(w);
+
+                // Remove the edge from the adjacency list.
+                adjList[v].Remove(w);
+                adjList[w].Remove(v);
+
+                // If w has unvisited neighbors, push it onto the stack.
+                if (adjList[w].Count > 0)
+                {
+                    stack.Push(w);
+                }
+                // Otherwise, add w to the cycle and pop it off the stack.
+                else
+                {
+                    cycle.Add(w);
+                    stack.Pop();
+                }
+            }
+
+            return cycle;
+        }
+	private void frc_file_Click(object sender, RoutedEventArgs e)
+        {
+            StreamReader file = new StreamReader("input.txt");
+            string s = file.ReadToEnd();
+            file.Close();
+            string[] str = s.Split('\n');
+            int n = str.Length;
+            List<int>[] adjList = new List<int>[n];
+            for (int i = 0; i < n; i++)
+            {
+                adjList[i] = ParseAdjacencyList(s);
+            }
+
+            // Find an Euler cycle.
+            List<int> cycle = FindEulerCycle22(adjList);
+            string qw = "";
+            // Display the result.
+            if (cycle == null)
+            {
+                qw += "No Euler cycle found.";
+            }
+            else
+            {
+                qw += string.Join(" -> ", cycle);
+            }
+            printResult(qw);
+        }
+        public void printResult(string result)
+        {
+            using (StreamWriter stream = new StreamWriter("output.txt", false))
+            {
+                stream.WriteLine(result);
+            }
+            MessageBox.Show("Решение записано в файл!");
+        }
+			
+    }
+}

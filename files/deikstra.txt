@@ -1,0 +1,294 @@
+<Window x:Class="deikstra.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:deikstra"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800" Background="Cornsilk">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+
+        <TextBlock VerticalAlignment="Top" Margin="90,55,0,0" FontFamily="Times New Roman" FontSize="15" Grid.ColumnSpan="2" >Кол-во</TextBlock>
+        <TextBlock VerticalAlignment="Top" Margin="90,73,0,0" FontFamily="Times New Roman" FontSize="15" Grid.ColumnSpan="2">вершин:</TextBlock>
+        <TextBox Name="vertex_tb"  Background="Thistle"  Width="30" Height="30" VerticalAlignment="Top" Margin="150,60,208,0" FontFamily="Times New Roman" FontSize="30"  />
+
+        <TextBlock VerticalAlignment="Top" HorizontalAlignment="Center" Margin="200,55,120,0" FontFamily="Times New Roman" FontSize="15">Кол-во</TextBlock>
+        <TextBlock VerticalAlignment="Top" HorizontalAlignment="Center" Margin="200,73,120,0" FontFamily="Times New Roman" FontSize="15">ребер:</TextBlock>
+        <TextBox Name="edges_tb"  Background="Thistle"  Width="30" Height="30" VerticalAlignment="Top" Margin="170,60,0,0" FontFamily="Times New Roman" FontSize="30" />
+
+        <TextBox Name="matrix_form"  Background="Thistle"  Width="200" Height="200" VerticalAlignment="Center" />
+
+
+        <Button Name="btn_matrix" Click="btn_matrix_Click" Background="PowderBlue"  Width="120" Height="40"  Grid.Column="1" Margin="0,0,0,344" Content="Решить" HorizontalAlignment="Center" FontFamily="Times New Roman" FontSize="23" />
+        <Button Name="n_btn" Click="n_btn_Click" Background="PowderBlue" Grid.Column="1" Width="250" Height="40" HorizontalAlignment="Center" VerticalAlignment="Center" Content="Перейти на след строку" FontFamily="Times New Roman" FontSize="23" Margin="0,0,0,80" />
+        <Button Name="btn_matrix_file" Click="btn_matrix_file_Click" Background="PowderBlue" Grid.Column="1" Height="40" Width="210" Content="Посчитать из файла" Margin="0,0,0,220" HorizontalAlignment="Center" FontFamily="Times New Roman" FontSize="23" />
+        <Button Name="steret" Click="steret_Click"  Background="Lavender"  Grid.Column="1" Height="40" Width="150" Content="Стереть" Margin="0,120,0,0" HorizontalAlignment="Center" FontFamily="Times New Roman" FontSize="23" />
+        <Button Name="exit" Click="exit_Click"  Background="Salmon"  Grid.Column="1" Height="40" Width="150" Content="Закрыть" Margin="0,250,0,0" HorizontalAlignment="Center" FontFamily="Times New Roman" FontSize="23" />
+    </Grid>
+</Window>
+
+
+
+
+
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+
+namespace deikstra
+{
+    /// <summary>
+    /// Логика взаимодействия для MainWindow.xaml
+    /// </summary>
+    public partial class MainWindow : Window
+    {
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
+
+        public int N; //кол-во вершин
+        public int M; //кол-во ребер
+        private void btn_matrix_file_Click(object sender, RoutedEventArgs e)
+        {
+
+            StreamReader file = new StreamReader("input.txt");
+            string s = file.ReadToEnd();
+            file.Close();
+            string[] str = s.Split('\n');
+            string[] col = str[0].Split(' ');
+            N = int.Parse(col[0]);
+            M = int.Parse(col[1]);
+            int[,] matrix = new int[N, N];
+            for (int i = 1; i <= M; i++)
+            {
+                col = str[i].Split(' ');
+                int a = int.Parse(col[0]) - 1;
+                int b = int.Parse(col[1]) - 1;
+                matrix[a, b] = 1;
+                matrix[b, a] = 1;
+            }
+
+
+            int[] d = new int[N];
+            int[] v = new int[N];
+            int temp, minindex, min;
+            int begin_index = 0;
+
+            for (int i = 0; i < N; i++)
+            {
+                d[i] = 10000;
+                v[i] = 1;
+            }
+
+            d[begin_index] = 0;
+
+            do
+            {
+                minindex = 10000;
+                min = 10000;
+                for (int i = 0; i < N; i++)
+                {
+                    if ((v[i] == 1) && (d[i] < min))
+                    {
+                        min = d[i];
+                        minindex = i;
+                    }
+                }
+
+                if (minindex != 10000)
+                {
+                    for (int i = 0; i < N; i++)
+                    {
+                        if (matrix[minindex, i] > 0)
+                        {
+                            temp = min + matrix[minindex, i];
+                            if (temp < d[i])
+                            {
+                                d[i] = temp;
+                            }
+                        }
+                    }
+                    v[minindex] = 0;
+                }
+            } while (minindex < 1000);
+
+
+            int[] ver = new int[N];
+            int end = 4;
+            ver[0] = end + 1;
+            int k = 1;
+            int weight = d[end];
+
+            while (end != begin_index)
+            {
+                for (int i = 0; i < N; i++)
+                {
+                    if (matrix[i, end] != 0)
+                    {
+                        int temp2 = weight - matrix[i, end];
+                        if (temp2 == d[i])
+                        {
+                            weight = temp2;
+                            end = i;
+                            ver[k] = i + 1;
+                            k++;
+                        }
+                    }
+                }
+            }
+            string mes2 = "";
+            for (int i = k - 1; i >= 0; i--)
+            {
+                mes2 += ver[i] + " ";
+            }
+            printRes(mes2);
+        }
+
+        private void n_btn_Click(object sender, RoutedEventArgs e)
+        {
+            matrix_form.Text += '\n';
+        }
+
+        private void btn_matrix_Click(object sender, RoutedEventArgs e)
+        {
+
+            N = Int32.Parse(vertex_tb.Text);
+            M = Int32.Parse(edges_tb.Text);
+            int[,] matrix = new int[N, N];
+            string[] input_matrix = matrix_form.Text.Split('\n');
+            string[] qq;
+            for (int i = 0; i < M; i++)
+            {
+                qq = input_matrix[i].Split(' ');
+                int a = int.Parse(qq[0]) - 1;
+                int b = int.Parse(qq[1]) - 1;
+                matrix[a, b] = 1;
+                matrix[b, a] = 1;
+
+            }
+
+            int[] d = new int[N];
+            int[] v = new int[N];
+            int temp, minindex, min;
+            int begin_index = 0;
+
+            for (int i = 0; i < N; i++)
+            {
+                d[i] = 10000;
+                v[i] = 1;
+            }
+
+            d[begin_index] = 0;
+
+            do
+            {
+                minindex = 10000;
+                min = 10000;
+                for (int i = 0; i < N; i++)
+                {
+                    if ((v[i] == 1) && (d[i] < min))
+                    {
+                        min = d[i];
+                        minindex = i;
+                    }
+                }
+
+                if (minindex != 10000)
+                {
+                    for (int i = 0; i < N; i++)
+                    {
+                        if (matrix[minindex, i] > 0)
+                        {
+                            temp = min + matrix[minindex, i];
+                            if (temp < d[i])
+                            {
+                                d[i] = temp;
+                            }
+                        }
+                    }
+                    v[minindex] = 0;
+                }
+            } while (minindex < 1000);
+
+            string mes = "Кратчайшие растояния до вершин:\n";
+            for (int i = 0; i < N; i++)
+            {
+                //d[i] = d[i] + 1;
+                //mes += d[i] + " ";
+                mes += $"{i + 1} = {d[i]}\n";
+            }    
+            MessageBox.Show(mes);
+
+
+            int[] ver = new int[N];
+            int end = 4;
+            ver[0] = end + 1;
+            int k = 1;
+            int weight = d[end];
+
+            while(end != begin_index)
+            {
+                for(int i = 0; i < N; i++)
+                {
+                    if (matrix[i,end] !=0)
+                    {
+                        int temp2 = weight - matrix[i, end];
+                        if(temp2 == d[i])
+                        {
+                            weight = temp2;
+                            end = i;
+                            ver[k] = i + 1;
+                            k++;
+                        }
+                    }
+                }
+            }
+            string mes2 = "Вывод кратчайшего пути:\n";
+            for (int i = k-1; i >=0; i--)
+            {
+                mes2 += ver[i] + " ";
+            }
+            MessageBox.Show(mes2);
+
+
+        }
+        public void printRes(string res)
+        {
+            using (StreamWriter stream = new StreamWriter("output.txt", false))
+            {
+                stream.WriteLine(res);
+            }
+            MessageBox.Show("Решение записано в файл!");
+        }
+
+        private void steret_Click(object sender, RoutedEventArgs e)
+        {
+            matrix_form.Text = "";
+            vertex_tb.Text = "";
+            edges_tb.Text = "";
+        }
+
+        private void exit_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+    }
+}

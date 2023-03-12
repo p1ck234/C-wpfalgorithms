@@ -1,0 +1,142 @@
+<Window x:Class="dfs.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:dfs"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+        <TextBox Name="rows_matrix"  Background="Chocolate" Width="30" Height="30" Margin="0,0,170,50" />
+        <TextBox Name="matrix_ad"  Background="Chocolate" Width="200" Height="200" VerticalAlignment="Bottom" />
+        <Button Name="output_matrix" Click="output_matrix_Click" Grid.Column="1" Width="200" Height="100" Content="Прочитать граф" />
+        <Button Name="enter_matrix"  Grid.Column="1" Width="200" Height="100" Content="новая строка" Click="enter_matrix_Click" Margin="0,300,0,0" />
+        <Button Name="put_matrix" Click="put_matrix_Click" Grid.Column="1" Width="200" Height="100" Content="Матрица из графа" Margin="0,0,0,300" />
+    </Grid>
+</Window>
+
+
+
+
+
+
+ using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+using System.ComponentModel;
+using System.Drawing;
+using System.IO;
+
+namespace dfs
+{
+    /// <summary>
+    /// Логика взаимодействия для MainWindow.xaml
+    /// </summary>
+    public partial class MainWindow : Window
+    {
+        public MainWindow()
+        {
+            InitializeComponent();
+
+        }
+        public static int N;
+
+        private void output_matrix_Click(object sender, RoutedEventArgs e)
+        {
+            N = Int32.Parse(rows_matrix.Text);
+            int[,] matrix = new int[N, N];
+            string[] input_matrix = matrix_ad.Text.Split('\n');
+            string[] qq;
+            for (int i = 0; i < N; i++)
+            {
+                qq = input_matrix[i].Split(' ');
+                for (int j = 0; j < N; j++)
+                {
+                    matrix[i, j] = int.Parse(qq[j]);
+                }
+
+            }
+            bool[] vs = new bool[N];
+            List<int> nodes = new List<int>();
+            DFS(0, matrix,vs,nodes);
+            string s = "";
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                s += nodes[i].ToString() + " ";
+            }
+            MessageBox.Show(s);
+            //printMas(matrix);
+        }
+
+
+        private void put_matrix_Click(object sender, RoutedEventArgs e)
+        {
+            StreamReader file = new StreamReader("input.txt");
+            string s = file.ReadToEnd();
+            file.Close();
+            string[] str = s.Split('\n');
+            string[] col = str[0].Split(' ');
+            int[,] a = new int[str.Length, col.Length];
+            int t = 0;
+            for (int i = 0; i < str.Length; i++)
+            {
+                col = str[i].Split(' ');
+                for (int j = 0; j < col.Length; j++)
+                {
+                    t = Convert.ToInt32(col[j]);
+                    a[i, j] = t;
+                    
+                }
+            }
+            N = str.Length;
+            bool[] vs = new bool[str.Length];
+            List<int> nodes2 = new List<int>();
+            DFS(0, a, vs, nodes2);
+            string ss = "";
+            for (int i = 0; i < nodes2.Count; i++)
+            {
+                ss += nodes2[i].ToString() + " ";
+            }
+            printResult(ss);
+        }
+
+        public void DFS(int v, int[,] mas, bool[] vs, List<int> nodes)
+        {
+            vs[v] = true;
+            nodes.Add(v+1);
+            for (int i = 0; i < N; i++)
+                if ((mas[v, i] != 0) && (!vs[i])) DFS(i, mas, vs, nodes);
+        }
+
+        public void printResult(string result)
+        {
+            using (StreamWriter stream = new StreamWriter("output.txt",false))
+            {
+                stream.WriteLine(result);
+            }
+            MessageBox.Show("Решение записано в файл!");
+        }
+
+        private void enter_matrix_Click(object sender, RoutedEventArgs e)
+        {
+            matrix_ad.Text += '\n';
+        }
+        
+        
+    }
+}

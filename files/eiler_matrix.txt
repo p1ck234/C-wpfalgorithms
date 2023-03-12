@@ -1,0 +1,173 @@
+<Window x:Class="EulerCycleFinder.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Euler Cycle Finder" Height="350" Width="525">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <StackPanel Orientation="Horizontal">
+            <Label Content="Number of Vertices:" Margin="5"/>
+            <TextBox x:Name="NumVertices" Text="5" Margin="5"/>
+            <Label Content="Adjacency Matrix:" Margin="5"/>
+            <TextBox x:Name="AdjMatrix" Text="0 1 0 1 1&#x0a;1 0 1 1 0&#x0a;0 1 0 1 0&#x0a;1 1 1 0 1&#x0a;1 0 0 1 0" Margin="5" VerticalScrollBarVisibility="Auto" Height="100"/>
+            <Button x:Name="FindEulerCycle" Content="Find Euler Cycle" Click="FindEulerCycle_Click" Margin="5"/>
+        	<Button x:Name="FindEulerCycle" Content="Find Euler Cycle" Click="FindEulerCycle_Click" Margin="5"/>
+           </StackPanel>
+        <TextBlock x:Name="ResultText" Grid.Row="1" Margin="5"/>
+    </Grid>
+</Window>
+
+
+
+
+
+
+
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Windows;
+
+namespace EulerCycleFinder
+{
+    public partial class MainWindow : Window
+    {
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
+
+        private void FindEulerCycle_Click(object sender, RoutedEventArgs e)
+        {
+            int n = int.Parse(NumVertices.Text);
+            int[,] adjMatrix = ParseAdjacencyMatrix(AdjMatrix.Text, n);
+
+            List<int> eulerCycle = FindEulerCycle(adjMatrix);
+
+            if (eulerCycle != null)
+            {
+                ResultText.Text = "Euler Cycle: " + string.Join(" -> ", eulerCycle);
+            }
+            else
+            {
+                ResultText.Text = "No Euler Cycle found.";
+            }
+        }
+
+        private int[,] ParseAdjacencyMatrix(string matrixText, int n)
+        {
+            int[,] adjMatrix = new int[n, n];
+            string[] rows = matrixText.Trim().Split('\n');
+            for (int i = 0; i < n; i++)
+            {
+                string[] cols = rows[i].Trim().Split(' ');
+                for (int j = 0; j < n; j++)
+                {
+                    adjMatrix[i, j] = int.Parse(cols[j]);
+                }
+            }
+            return adjMatrix;
+        }
+
+        private List<int> FindEulerCycle(int[,] adjMatrix)
+        {
+            int n = adjMatrix.GetLength(0);
+            int[] degrees = new int[n];
+
+            // Calculate the degree of each vertex.
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < n; j++)
+                {
+                    degrees[i] += adjMatrix[i, j];
+                }
+            }
+
+            // Check if all degrees are even.
+            if (degrees.Any(d => d % 2 == 1
+        {
+            return null;
+        }
+
+        // Initialize the stack with a starting vertex.
+        Stack<int> stack = new Stack<int>();
+        stack.Push(0);
+
+        // Create a copy of the adjacency matrix to mark edges as visited.
+        int[,] adjMatrixCopy = new int[n, n];
+        Array.Copy(adjMatrix, adjMatrixCopy, n * n);
+
+        List<int> cycle = new List<int>();
+
+        while (stack.Count > 0)
+        {
+            int v = stack.Peek();
+
+            // Find an adjacent vertex that hasn't been visited.
+            int w = -1;
+            for (int i = 0; i < n; i++)
+            {
+                if (adjMatrixCopy[v, i] == 1)
+                {
+                    w = i;
+                    break;
+                }
+            }
+
+            if (w == -1)
+            {
+                // If there are no unvisited adjacent vertices, add v to the cycle.
+                cycle.Add(v);
+                stack.Pop();
+            }
+            else
+            {
+                // Otherwise, add the edge (v, w) to the cycle and mark it as visited.
+                cycle.Add(v);
+                adjMatrixCopy[v, w] = 0;
+                adjMatrixCopy[w, v] = 0;
+                stack.Push(w);
+            }
+        }
+
+        // Reverse the cycle to get the Euler cycle.
+        cycle.Reverse();
+
+        return cycle;
+    }
+private void FindEulerCycle_file_Click(object sender, RoutedEventArgs e)
+        {
+            StreamReader file = new StreamReader("input.txt");
+            string s = file.ReadToEnd();
+            file.Close();
+            string[] str = s.Split('\n');
+            string[] col = str[0].Split(' ');
+            int n = str.Length;
+            int[,] adjMatrix = ParseAdjacencyMatrix(s, n);
+
+            List<int> eulerCycle = FindEulerCycle2(adjMatrix);
+            string qw = "";
+            if (eulerCycle != null)
+            {
+                qw += "Euler Cycle: " + string.Join(" -> ", eulerCycle);
+            }
+            else
+            {
+                qw += "No Euler Cycle found.";
+            }
+            printResult(qw);
+        }
+        public void printResult(string result)
+        {
+            using (StreamWriter stream = new StreamWriter("output.txt", false))
+            {
+                stream.WriteLine(result);
+            }
+            MessageBox.Show("Решение записано в файл!");
+        }
+}
+}

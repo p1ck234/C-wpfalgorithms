@@ -1,0 +1,193 @@
+<Window x:Class="gam_cycle.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:gam_cycle"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800" Background="Cornsilk">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+        <TextBox Name="size_matrix"  Background="Thistle"  Width="30" Height="30" VerticalAlignment="Top" Margin="150,60,208,0" FontFamily="Times New Roman" FontSize="30" TextChanged="size_matrix_TextChanged" />
+        <TextBox Name="mat_form"  Background="Thistle"  Width="200" Height="200" VerticalAlignment="Center" />
+        <Button Name="mat_btn" Click="mat_btn_Click" Grid.Column="1" Width="200" Height="50" Content="Прочитать граф" Background="PowderBlue" FontFamily="Times New Roman" FontSize="23" />
+        <Button Name="nn_matrix" Click="nn_matrix_Click" Grid.Column="1" Width="200" Height="50" Content="Новая строка" Margin="0,0,0,150" Background="PowderBlue" FontFamily="Times New Roman" FontSize="23" />
+        <Button Name="file_btn" Click="file_btn_Click" Grid.Column="1" Width="200" Height="50" Content="Матрица из графа" Margin="0,0,0,300" Background="PowderBlue" FontFamily="Times New Roman" FontSize="23" />
+        <Button Name="steret" Click="steret_Click"  Background="Lavender"  Grid.Column="1" Height="40" Width="150" Content="Стереть" Margin="0,150,0,0" HorizontalAlignment="Center" FontFamily="Times New Roman" FontSize="23" />
+        <Button Name="exit" Click="exit_Click"  Background="Salmon"  Grid.Column="1" Height="40" Width="150" Content="Закрыть" Margin="0,270,0,0" HorizontalAlignment="Center" FontFamily="Times New Roman" FontSize="23" />
+    </Grid>
+
+</Window>
+
+
+
+
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+
+namespace gam_cycle
+{
+    /// <summary>
+    /// Логика взаимодействия для MainWindow.xaml
+    /// </summary>
+    public partial class MainWindow : Window
+    {
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
+
+        public int N;
+        public string mes = "";
+
+        private void mat_btn_Click(object sender, RoutedEventArgs e)
+        {
+            N = Int32.Parse(size_matrix.Text);
+            int[,] matrix = new int[N, N];
+            string[] input_matrix = mat_form.Text.Split('\n');
+            string[] qq;
+            for (int i = 0; i < N; i++)
+            {
+                qq = input_matrix[i].Split(' ');
+                for (int j = 0; j < N; j++)
+                {
+                    matrix[i, j] = int.Parse(qq[j]);
+                }
+
+            }
+            int[] c;
+            int[] path;
+            int v0 = 1;
+            path = new int[N];
+            c = new int[N];
+            for (int i = 0; i < N; i++)
+                c[i] = -1;
+            path[0] = v0;
+            c[v0] = v0;
+            gamilton(1, matrix, c, path);
+            int fil = 0;
+            printMes(path, fil);
+        }
+
+        private void nn_matrix_Click(object sender, RoutedEventArgs e)
+        {
+            mat_form.Text += '\n';
+        }
+
+        private void file_btn_Click(object sender, RoutedEventArgs e)
+        {
+            StreamReader file = new StreamReader("input.txt");
+            string s = file.ReadToEnd();
+            file.Close();
+            string[] str = s.Split('\n');
+            string[] col = str[0].Split(' ');
+            int [,] matrix = new int[str.Length, col.Length];
+            int t = 0;
+            for (int i = 0; i < str.Length; i++)
+            {
+                col = str[i].Split(' ');
+                for (int j = 0; j < col.Length; j++)
+                {
+                    t = Convert.ToInt32(col[j]);
+                    matrix[i, j] = t;
+
+                }
+            }
+            N = str.Length;
+            int[] c;
+            int[] path;
+            int v0 = 1;
+            path = new int[N];
+            c = new int[N];
+            for (int i = 0; i < N; i++)
+                c[i] = -1;
+            path[0] = v0;
+            c[v0] = v0;
+            gamilton(1, matrix,c,path);
+            int fil = 1;
+            printMes(path,fil);
+
+        }
+
+        public void printMes(int[] path,int file)
+        {
+            for (int i = 0; i < N; i++)
+            {
+                if(i == N-1)
+                {
+                    mes += $"{path[i] + 1}";
+                }
+                else
+                    mes += $"{path[i] + 1}->";
+            }
+            if (file == 0)
+            {
+                MessageBox.Show(mes);
+            }
+            else printResult(mes);
+
+        }
+
+
+        public void printResult(string result)
+        {
+            using (StreamWriter stream = new StreamWriter("output.txt", false))
+            {
+                stream.WriteLine(result);
+            }
+            MessageBox.Show("Решение записано в файл!");
+        }
+
+        public int gamilton(int k, int[,] matrix, int[] c, int[] path)
+        {
+            int v, q1 = 0;
+            int v0 = 2;
+            for (v=0; v < N && q1==0; v++)
+            {
+                if (matrix[v, path[k-1]] ==1 || matrix[v, path[k-1]] ==1)
+                {
+                    if ((k == N) && (v == v0)) q1 = 1;
+                    else if (c[v] == -1)
+                    {
+                        c[v] = k; path[k] = v;
+                        q1 = gamilton(k + 1, matrix,c,path);
+                        if (q1 == 0) c[v] = -1;
+
+                    }
+                    else continue;
+                }
+            }
+            return q1;
+        }
+
+        private void exit_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
+        private void steret_Click(object sender, RoutedEventArgs e)
+        {
+            size_matrix.Text = "";
+            mat_form.Text = "";
+        }
+
+       
+    }
+}

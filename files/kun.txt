@@ -1,0 +1,185 @@
+<Window x:Class="kun.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:kun"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800" Background="LightSlateGray" >
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+        <TextBox Name="rows_matrix"  Background="PapayaWhip" VerticalAlignment="Center"  Width="30" Height="30" Margin="10,0,355,0" FontSize="20" FontFamily="Comic Sans MS" FontStyle="Italic" />
+        <TextBox Name="matrix_ad"  Background="PapayaWhip" VerticalAlignment="Center" Width="200" Height="200"  Margin="110,0,80,0" FontSize="20" FontFamily="Comic Sans MS" FontStyle="Italic" />
+        <Button Name="output_matrix" Click="output_matrix_Click" Grid.Column="1" Width="180" Height="80" Content="Прочитать граф" Margin="10.2,62,206.6,278" FontSize="20" FontFamily="Comic Sans MS" FontStyle="Italic" Background="PaleTurquoise" />
+        <Button Name="enter_matrix"  Grid.Column="1" Width="180" Height="80" Content="Новая строка" Click="enter_matrix_Click" Margin="112.2,177,104.6,163" FontSize="20" FontFamily="Comic Sans MS" HorizontalAlignment="Center" FontStyle="Italic" Background="GreenYellow" />
+        <Button Name="put_matrix" Click="put_matrix_Click" Grid.Column="1" Width="190" Height="80" Content="Матрица из графа" Margin="207.2,62,-0.4,278" FontSize="20" FontFamily="Comic Sans MS" FontStyle="Italic" Background="SandyBrown" />
+        <Button Name="steret" Click="steret_Click"  Grid.Column="1" Width="180" Height="80" Content="Стереть" Margin="112.2,262,104.6,78" FontSize="20" FontFamily="Comic Sans MS" FontStyle="Italic" Background="LightGray"/>
+        <Button Name="exit" Click="exit_Click"  Grid.Column="1" Width="100" Height="60" Content="Выход" Margin="290,350,0,10" FontSize="20" FontFamily="Comic Sans MS" FontStyle="Italic" Background="Red" />
+    </Grid>
+
+</Window>
+
+
+
+
+
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+
+namespace kun
+{
+    /// <summary>
+    /// Логика взаимодействия для MainWindow.xaml
+    /// </summary>
+    public partial class MainWindow : Window
+    {
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
+        public int N;
+        private void output_matrix_Click(object sender, RoutedEventArgs e)
+        {
+            N = Int32.Parse(rows_matrix.Text);
+            int[,] a = new int[N, N];
+            string[] input_matrix = matrix_ad.Text.Split('\n');
+            string[] qq;
+            for (int i = 0; i < N; i++)
+            {
+                qq = input_matrix[i].Split(' ');
+                for (int j = 0; j < N; j++)
+                {
+                    a[i, j] = int.Parse(qq[j]);
+                }
+
+            }
+
+
+            bool[] used = new bool[N];
+            int[] mt = new int[N];
+            for (int i = 0; i < N; i++)
+            {
+                mt[i] = -1;
+                used[i] = false;
+            }
+
+            for (int v = 0; v < N; ++v)
+            {
+                try_kun(v, used, a, mt);
+            }
+
+            string mew = "";
+            for (int i = 0; i < N; ++i)
+            {
+                if (mt[i] != -1)
+                    mew += $"{mt[i] + 1}   {i + 1}\n";
+            }
+            MessageBox.Show(mew);
+
+        }
+
+    
+        bool try_kun(int v, bool[] used, int[,] mas, int[] mt)
+        {
+            if (used[v]) return false;
+            used[v] = true;
+            for (int i = 0; i < mas.GetLength(1); ++i)
+            {
+                int to = mas[v, i];
+                if (mt[to] == -1 || try_kun(mt[to], used, mas, mt) == true)
+                {
+                    mt[to] = v;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+
+        private void put_matrix_Click(object sender, RoutedEventArgs e)
+        {
+            StreamReader file = new StreamReader("input.txt");
+            string s = file.ReadToEnd();
+            file.Close();
+            string[] str = s.Split('\n');
+            string[] col = str[0].Split(' ');
+            int[,] a = new int[str.Length, col.Length];
+            int t = 0;
+            for (int i = 0; i < str.Length; i++)
+            {
+                col = str[i].Split(' ');
+                for (int j = 0; j < col.Length; j++)
+                {
+                    t = Convert.ToInt32(col[j]);
+                    a[i, j] = t;
+
+                }
+            }
+            N = str.Length;
+            bool[] used = new bool[N];
+            int[] mt = new int[N];
+            for(int i =0;i<N;i++)
+            {
+                mt[i] = -1;
+                used[i] = false;
+            }
+
+            for(int v =0; v < N;++v)
+            {
+                try_kun(v, used,a,mt);
+            }
+
+            string mew = "";
+            for(int i =0;i<N;++i)
+            {
+                if (mt[i] != -1)
+                    mew += $"{mt[i] + 1}   {i + 1}\n";
+            }
+            printResult(mew);
+                
+        }
+
+
+        public void printResult(string result)
+        {
+            using (StreamWriter stream = new StreamWriter("output.txt", false))
+            {
+                stream.WriteLine(result);
+            }
+            MessageBox.Show("Решение записано в файл!");
+        }
+
+        private void enter_matrix_Click(object sender, RoutedEventArgs e)
+        {
+            matrix_ad.Text += '\n';
+        }
+
+        private void steret_Click(object sender, RoutedEventArgs e)
+        {
+            matrix_ad.Text = "";
+            rows_matrix.Text = "";
+        }
+
+        private void exit_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+    }
+}
